@@ -58,6 +58,9 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             ;;
+        --edk2Rev=*)
+            EDK2_REV=$(echo "$option" | sed 's/--edk2Rev=//' | sed 's/[[:space:]]*//')
+            ;;
         --default)
             printf "Using default values"
             cfgLoaded=1
@@ -95,14 +98,17 @@ SetVars() {
 # --------------------------------------
 # preferred build tool (gnu or darwin)
 # --------------------------------------
-[ "${XCODE:-}" ] || XCODE="" # empty by default, overrides the auto-detected XCODE toolchain, possible values: XCODE32 XCODE5 XCODE8
-[ "${GNU:-}" ] || GNU="" # empty by default (GCC53 is used if not defined), override the GCC toolchain, possible values: GCC49 GCC53
+[ "${XCODE:-}" ]    || XCODE="" # empty by default, overrides the auto-detected XCODE toolchain, possible values: XCODE32 XCODE5 XCODE8
+[ "${GNU:-}" ]      || GNU="" # empty by default (GCC53 is used if not defined), override the GCC toolchain, possible values: GCC49 GCC53
 Build_Tool="XCODE" # Build tool. Possible values: XCODE or GNU. DO NOT USE ANY OTHER VALUES HERE !
 # in Linux this get overrided and GCC53 used anyway!
 # --------------------------------------
 
 # Preferences:
 [ "${EDK2_REV:-}" ] || EDK2_REV="25373" # or any revision supported by Slice (otherwise no claim please)
+
+[ "${PATCHES_FOR_EDK2:-}" ] || PATCHES_FOR_EDK2="/edk2/Clover/Patches_for_EDK2"
+
 
 # "SUGGESTED_CLOVER_REV" is used to force the script to updated at the specified revision:
 # REQUIRED is a known edk2 revision (EDK2_REV="XXXXX") compatible with the "/Clover/Patches_for_EDK2" coming with
@@ -977,11 +983,21 @@ TIMES=0
 IsLinkOnline ${CLOVER_REP}
 cd "${DIR_MAIN}"/edk2/Clover
 svnWithErrorCheck "$cmd" "$(pwd)"
+
 printHeader 'Apply Edk2 patches'
-cp -R "${DIR_MAIN}"/edk2/Clover/Patches_for_EDK2/* "${DIR_MAIN}"/edk2/
+if [ "${PATCHES_FOR_EDK2:-}" ] && [[ -d "${PATCHES_FOR_EDK2}" ]] ; then
+    echo "applying ${PATCHES_FOR_EDK2}"
+    cp -R "${DIR_MAIN}"/edk2/Clover/"${PATCHES_FOR_EDK2}"/* "${DIR_MAIN}"/edk2/
+else
+    if [[ "${PATCHES_FOR_EDK2}" == "NO" ]]; then
+        echo "skipping as requested"
+    else
+        echo "skipping because variable is unset or empty"
+    fi
+fi
 
 # in Lion cp cause error with subversion (comment this line and enable next)
-# rsync -rv --exclude=.svn "${DIR_MAIN}"/edk2/Clover/Patches_for_EDK2/ "${DIR_MAIN}"/edk2
+# rsync -rv --exclude=.svn "${DIR_MAIN}"/edk2/Clover/"${PATCHES_FOR_EDK2}"/ "${DIR_MAIN}"/edk2
 }
 # --------------------------------------
 needGETTEXT() {
