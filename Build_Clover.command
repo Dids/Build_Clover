@@ -37,6 +37,60 @@ PREFS_FILE="Build_Clover.cfg"
 # --------------------------------------
 # FUNCTIONS
 # --------------------------------------
+# Check the command line arguments
+checkCmdlineArguments() {
+
+while [[ $# -gt 0 ]]; do
+    local cfgLoaded=0
+    local option=$1
+    shift
+    case "$option" in
+        --cfg=*)
+            # --cfg is used to specify a preferences file, so that you can override it at any time
+            local CFG_FILE=$(echo "$option" | sed 's/--cfg=//' | sed 's/[[:space:]]*//')
+            if [[ -f "${CFG_FILE}" ]]; then
+                echo "Override preferences using $CFG_FILE"
+                . "${CFG_FILE}"
+                echo "Loaded!"
+                cfgLoaded=1
+            else
+                echo "(--cfg) $CFG_FILE: file not found!"
+                exit 1
+            fi
+            ;;
+        --default)
+            printf "Using default values"
+            cfgLoaded=1
+            ;;
+        -*)
+            printf "Unrecognized option \`%s'\n" "$option" 1>&2
+            exit 1
+            ;;
+            # TODO: we can override a signle vars here..
+        *)
+            ;;
+    esac
+done
+
+if [[ $cfgLoaded -eq 0 ]]; then
+    # You have the cfg (BUILD_CLOVER_CFG_PATH) file path in your bash profile already?
+    if [ "${BUILD_CLOVER_CFG_PATH:-}" ] && [[ -f "${BUILD_CLOVER_CFG_PATH}" ]]; then
+        echo "sourcing ${BUILD_CLOVER_CFG_PATH}"
+        echo " from your profile."
+        . "${BUILD_CLOVER_CFG_PATH}"
+    else
+        # We have Build_Clover.cfg to set our preferences?
+        if [[ -f "${SCRIPT_ABS_PATH}"/"$PREFS_FILE" ]]; then
+            # config file found...
+            echo "$PREFS_FILE found, loading it."
+            . "${SCRIPT_ABS_PATH}"/"$PREFS_FILE"
+        else
+            echo "$PREFS_FILE not found, using default values!"
+        fi
+    fi
+fi
+}
+
 SetVars() {
 # --------------------------------------
 # preferred build tool (gnu or darwin)
@@ -1494,19 +1548,7 @@ if [[ $EUID -eq 0 ]]; then printError "\nThis script should not be run using sud
 if [[ -f /tmp/Build_Clover.tmp ]]; then rm -f /tmp/Build_Clover.tmp; fi
 
 FindScriptPath
-
-# We have Build_Clover.cfg to set our preferences?
-if [[ -f "${SCRIPT_ABS_PATH}"/"$PREFS_FILE" ]];
-then
-	# config file found... 
-	echo "$PREFS_FILE found."
-else
-	# config file not found create it... 
-	echo "$PREFS_FILE not found."
-	touch "${SCRIPT_ABS_PATH}"/"$PREFS_FILE"
-	# populate with stock value
-	# ...work in progress...
-fi
+checkCmdlineArguments $@
 SetVars
 
 # setting default paths
