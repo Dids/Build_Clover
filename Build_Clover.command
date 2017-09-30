@@ -72,7 +72,7 @@ Build_Tool="XCODE" # Build tool. Possible values: XCODE or GNU. DO NOT USE ANY O
 # and fail the script accordigily
 [ "${FAST_UPDATE:-}" ]      || FAST_UPDATE="NO" # or FAST_UPDATE="YES" # no check, faster
 
-[ "${DISABLE_CLEAR:-}" ]    || DISABLE_CLEAR="NO" # quit messing with my Terminal window
+[ "${DISABLE_CLEAR:-}" ]    || DISABLE_CLEAR="YES" # quit messing with my Terminal window
 # ---------------------------->
 # default behavior (don't touch these vars)
 NASM_PREFERRED="2.13.01"

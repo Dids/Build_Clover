@@ -1,0 +1,79 @@
+# Preferences for Build_Clover.command script,
+# a way to make it persistent through updates
+
+# SUGGESTED_CLOVER_REV
+# used to download a specifi Clover revision.
+# Actually this works using subversion
+export SUGGESTED_CLOVER_REV=""
+
+# MODE
+# used to tell to Build_Clover.command where to download edk2 and Clover:
+# MODE="S" the src is in ~/
+# MODE="R" the script path is the place where the src folder is created
+# Whit R mode you can work in any sub folder (also on other drive). The only
+# limit is that your path should not contains blank spaces
+export MODE="S"
+
+# DEFAULT_MACROS
+# You can set your default macros for ebuild.sh
+export DEFAULT_MACROS="-D NO_GRUB_DRIVERS_EMBEDDED"
+
+# BUILD_PKG
+# Default is YES, otherwise the package will not be created
+export BUILD_PKG="YES"
+
+# BUILD_PKG
+# Default is NO, otherwise the iso image will be created after building the package
+export BUILD_ISO="NO"
+
+# USEHFSPLUS
+# Default is NO, use YES to download the hfs + driver
+export USEHFSPLUS="NO"
+
+# USEAPFS
+# Default is NO, use YES to download the apfs driver
+export USEAPFS="NO"
+
+# USENTFS
+# Default is NO, use YES to download the ntfs driver
+export USENTFS="NO"
+
+# FAST_UPDATE
+# Default is NO: the script check if a link is reachable and is online
+# Set YES to skip the check. Faster but..
+export FAST_UPDATE="NO"
+
+# DISABLE_CLEAR
+# Default is YES: better log because clear command isnt used
+# Also the terminal window will not be resized.
+# Otherwise use NO
+export DISABLE_CLEAR="YES"
+
+# GITHUB
+# link to Build_Clover.command. Default is:
+# https://raw.githubusercontent.com/Micky1979/Build_Clover/master/Build_Clover.command
+# You can change it to try branches and forks
+export GITHUB="https://raw.githubusercontent.com/Micky1979/Build_Clover/master/Build_Clover.command"
+
+# CLOVER_REP
+# link to the Clover repository. Default is:
+# svn://svn.code.sf.net/p/cloverefiboot/code
+# Actually (30 Sept,2017) can work only with subversion but we're working to use git as well
+export CLOVER_REP="svn://svn.code.sf.net/p/cloverefiboot/code"
+
+# EDK2_REP
+# link to the edk2 repository. Default is:
+# svn://svn.code.sf.net/p/edk2/code/trunk/edk2
+# Actually (30 Sept,2017) can work only with subversion but we're working to use git as well
+export EDK2_REP="svn://svn.code.sf.net/p/edk2/code/trunk/edk2"
+
+# SELF_UPDATE_OPT and PING_RESPONSE
+# Used to hide or unhide the auto update capabilities of the script.
+# Default is NO for both, YES otherwise.
+export SELF_UPDATE_OPT="NO"
+export PING_RESPONSE="NO"
+
+# MY_SCRIPT
+# Here you can set a path to a secondary script callable by "run my script on the source" option.
+# this variable is unset by default
+export MY_SCRIPT=
