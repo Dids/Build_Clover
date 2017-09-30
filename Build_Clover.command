@@ -32,7 +32,7 @@ export LC_ALL=C
 SYSNAME="$( uname )"
 
 BUILDER=$USER # don't touch!
-PREFS_FILE="buildClover.cfg"
+PREFS_FILE="Build_Clover.cfg"
 
 # --------------------------------------
 # FUNCTIONS
@@ -1495,7 +1495,7 @@ if [[ -f /tmp/Build_Clover.tmp ]]; then rm -f /tmp/Build_Clover.tmp; fi
 
 FindScriptPath
 
-# We have buildClover.cfg to set our preferences?
+# We have Build_Clover.cfg to set our preferences?
 if [[ -f "${SCRIPT_ABS_PATH}"/"$PREFS_FILE" ]];
 then
 	# config file found... 
