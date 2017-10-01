@@ -185,14 +185,14 @@ if [[ $opt -ge 1 ]] && [[ $opt -le $count ]]; then
                 if [[ -f "${BUILD_CLOVER_CFG_PATH}" ]]; then
                     if ! IsPathWritable "${BUILD_CLOVER_CFG_PATH}"; then
                         if [[ "$USER" != root ]]; then echo "type your password to save preferences:"; fi
-                        sudo cp -R /tmp/cfg.txt "${BUILD_CLOVER_CFG_PATH}"
+                        sudo cp -R /tmp/cfg.txt "${BUILD_CLOVER_CFG_PATH}" && sudo -k
                     else
                         cp -R /tmp/cfg.txt "${BUILD_CLOVER_CFG_PATH}"
                     fi
                 elif [[ -d "${fileDir}" ]]; then
                     if ! IsPathWritable "${fileDir}"; then
                         if [[ "$USER" != root ]]; then echo "type your password to save preferences:"; fi
-                        sudo cp -R /tmp/cfg.txt "${BUILD_CLOVER_CFG_PATH}"
+                        sudo cp -R /tmp/cfg.txt "${BUILD_CLOVER_CFG_PATH}" && sudo -k
                     else
                         cp -R /tmp/cfg.txt "${BUILD_CLOVER_CFG_PATH}"
                     fi
