@@ -27,7 +27,7 @@
 # and all others (I'll be happy to increase this list and to not forgot anyone)
 #
 
-SCRIPTVER="v4.5.5"
+SCRIPTVER="v4.5.6"
 export LC_ALL=C
 SYSNAME="$( uname )"
 
