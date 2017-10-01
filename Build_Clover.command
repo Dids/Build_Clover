@@ -34,6 +34,30 @@ SYSNAME="$( uname )"
 BUILDER=$USER # don't touch!
 PREFS_FILE="Build_Clover.cfg"
 
+env_vars=(
+    SUGGESTED_CLOVER_REV
+    MODE
+    XCODE
+    GNU
+    Build_Tool
+    DEFAULT_MACROS
+    BUILD_PKG
+    BUILD_ISO
+    USEHFSPLUS
+    USEAPFS
+    USENTFS
+    FAST_UPDATE
+    DISABLE_CLEAR
+    GITHUB
+    CLOVER_REP
+    EDK2_REP
+    SELF_UPDATE_OPT
+    PING_RESPONSE
+    MY_SCRIPT
+    'Save'
+    'Exit Preferences without saving'
+    'See explanations'
+)
 # --------------------------------------
 # FUNCTIONS
 # --------------------------------------
@@ -52,6 +76,7 @@ while [[ $# -gt 0 ]]; do
                 echo "Override preferences using $CFG_FILE"
                 . "${CFG_FILE}"
                 echo "Loaded!"
+                BUILD_CLOVER_CFG_PATH="${CFG_FILE}"
                 cfgLoaded=1
             else
                 echo "(--cfg) $CFG_FILE: file not found!"
@@ -90,7 +115,122 @@ if [[ $cfgLoaded -eq 0 ]]; then
         else
             echo "$PREFS_FILE not found, using default values!"
         fi
+        BUILD_CLOVER_CFG_PATH="${SCRIPT_ABS_PATH}"/"$PREFS_FILE"
     fi
+fi
+}
+
+SetPreference() {
+    export ${1}="${2}"
+    if [[ -f "${BUILD_CLOVER_CFG_PATH}" ]]; then
+        cat "${BUILD_CLOVER_CFG_PATH}" > /tmp/cfg.txt
+    else
+        touch /tmp/cfg.txt
+    fi
+
+    local newVar="${1}=\"${2}\""
+    
+    if grep -q "export ${1}=" /tmp/cfg.txt; then
+        local num="$(grep -n "export ${1}=" /tmp/cfg.txt | sed 's/:.*//')"
+#        echo "found at line \"${num}\""
+        if [[ "$SYSNAME" == Darwin ]]; then
+            sed -i "" "${num}s/.*/${newVar}/" /tmp/cfg.txt
+        else
+            sed -i "${num}s/.*/${newVar}/" /tmp/cfg.txt
+        fi
+        GetPreferences "ready to be saved"
+    else
+        echo "${newVar}" > /tmp/cfg.txt
+        GetPreferences "ready to be saved"
+    fi
+}
+
+GetPreferences() {
+if [ -n "$1" ]; then
+    echo "$1" && echo
+fi
+local URL="https://raw.githubusercontent.com/Micky1979/Build_Clover/preferences/Build_Clover.cfg"
+local count=0
+for i in "${env_vars[@]}"
+do
+    ((count+=1))
+    case "${i}" in
+        'Save')
+            echo
+            printf "\033[1;36m\t ${count}) ${i}\033[0m\n"
+        ;;
+        'Exit Preferences without saving')
+            printf "\033[1;36m\t ${count}) ${i}\033[0m\n"
+        ;;
+        'See explanations')
+            printf "\033[1;36m\t ${count}) ${i}\033[0m\n"
+        ;;
+        *)
+            printf "\t $count) ${i}=${!i}\n"
+        ;;
+    esac
+
+done
+echo
+echo "select a variable to be changed:"
+printf '? ' && read opt
+
+if [[ $opt -ge 1 ]] && [[ $opt -le $count ]]; then
+    local v="${env_vars[$((opt - 1))]}"
+    case "${v}" in
+        'Save')
+            if [[ -f /tmp/cfg.txt ]]; then
+                local fileDir="$(dirname "${BUILD_CLOVER_CFG_PATH}")"
+                local file="$(basename "${BUILD_CLOVER_CFG_PATH}")"
+                if [[ -f "${BUILD_CLOVER_CFG_PATH}" ]]; then
+                    if ! IsPathWritable "${BUILD_CLOVER_CFG_PATH}"; then
+                        if [[ "$USER" != root ]]; then echo "type your password to save preferences:"; fi
+                        sudo cp -R /tmp/cfg.txt "${BUILD_CLOVER_CFG_PATH}"
+                    else
+                        cp -R /tmp/cfg.txt "${BUILD_CLOVER_CFG_PATH}"
+                    fi
+                elif [[ -d "${fileDir}" ]]; then
+                    if ! IsPathWritable "${fileDir}"; then
+                        if [[ "$USER" != root ]]; then echo "type your password to save preferences:"; fi
+                        sudo cp -R /tmp/cfg.txt "${BUILD_CLOVER_CFG_PATH}"
+                    else
+                        cp -R /tmp/cfg.txt "${BUILD_CLOVER_CFG_PATH}"
+                    fi
+                else
+                    printWarning "\nCannot save preferences..\n"
+                fi
+
+            else
+                printWarning "\nTemporary file not found, Preferences cannot be saved!\n"
+            fi
+            build
+        ;;
+        'Exit Preferences without saving')
+            build
+        ;;
+        'See explanations')
+            if [[ "$SYSNAME" == Darwin ]]; then
+                open $URL
+            else
+                if which xdg-open > /dev/null
+                then
+                    xdg-open $URL
+                elif which gnome-open > /dev/null
+                then
+                    gnome-open $URL
+                fi
+            fi
+            GetPreferences
+        ;;
+        *)
+            echo "enter the new value for ${v}:"
+            echo && read newvar
+            SetPreference "${v}" "${newvar}"
+        ;;
+    esac
+
+else
+    GetPreferences "invalid choice!"
 fi
 }
 
@@ -98,9 +238,9 @@ SetVars() {
 # --------------------------------------
 # preferred build tool (gnu or darwin)
 # --------------------------------------
-[ "${XCODE:-}" ]    || XCODE="" # empty by default, overrides the auto-detected XCODE toolchain, possible values: XCODE32 XCODE5 XCODE8
-[ "${GNU:-}" ]      || GNU="" # empty by default (GCC53 is used if not defined), override the GCC toolchain, possible values: GCC49 GCC53
-Build_Tool="XCODE" # Build tool. Possible values: XCODE or GNU. DO NOT USE ANY OTHER VALUES HERE !
+[ "${XCODE:-}" ]        || XCODE="" # empty by default, overrides the auto-detected XCODE toolchain, possible values: XCODE32 XCODE5 XCODE8
+[ "${GNU:-}" ]          || GNU="" # empty by default (GCC53 is used if not defined), override the GCC toolchain, possible values: GCC49 GCC53
+[ "${Build_Tool:-}" ]   || Build_Tool="XCODE" # Build tool. Possible values: XCODE or GNU. DO NOT USE ANY OTHER VALUES HERE !
 # in Linux this get overrided and GCC53 used anyway!
 # --------------------------------------
 
@@ -258,7 +398,8 @@ done
 }
 # --------------------------------------
 CleanExit () {
-if [[ -f /tmp/Build_Clover.tmp ]]; then rm -f /tmp/Build_Clover.tmp; fi
+rm -f /tmp/Build_Clover.tmp
+rm -f /tmp/tmp/cfg.txt
 exit 0
 }
 # --------------------------------------
@@ -849,7 +990,7 @@ local result=1
 # file/folder exists?
 if [[ ! -e "${1}" ]]; then printWarning "${1} does not exist!\n"; return $result; fi
 if [[ -w "${1}" ]]; then
-	printMessage "${1} is writable!\n"
+#   printMessage "${1} is writable!\n"
 	result=0
 else
 	printWarning "${1} is not writable!\n"
@@ -1282,6 +1423,7 @@ if [[ -d "${DIR_MAIN}/edk2/Clover/.svn" ]] ; then
 		options+=("build existing revision with custom macros enabled")
 		options+=("info and limitations about this script")
 		options+=("enter Developers mode (only for devs)")
+        options+=("Edit Preferences")
 		options+=("Exit")
 	fi
 
@@ -1418,6 +1560,7 @@ if [[ -d "${DIR_MAIN}/edk2/Clover/.svn" ]] ; then
 		"run my script on the source" )
 			[ "${MY_SCRIPT:-}" ] && eval "${MY_SCRIPT}" || printHeader "You should export MY_SCRIPT with the path to your script.." && CleanExit;;
 		"info and limitations about this script" ) showInfo;;
+        "Edit Preferences" ) ClearScreen && BUILDER=$USER && GetPreferences;;
 		"Back to Main Menu" ) ClearScreen && BUILDER=$USER && build;;
 		"Exit" ) CleanExit;;
 		* ) ClearScreen && echo "invalid option!!" && build;;
