@@ -63,7 +63,7 @@ env_vars=(
 # --------------------------------------
 # Check the command line arguments
 checkCmdlineArguments() {
-
+FindScriptPath
 while [[ $# -gt 0 ]]; do
     local cfgLoaded=0
     local option=$1
@@ -1704,11 +1704,11 @@ pressAnyKey "Clover was built successfully!" noclear; ClearScreen; build
 # don't use sudo!
 if [[ $EUID -eq 0 ]]; then printError "\nThis script should not be run using sudo!!\n\n"; exit 1; fi
 # Cleaning up any old data if exists
-if [[ -f /tmp/Build_Clover.tmp ]]; then rm -f /tmp/Build_Clover.tmp; fi
+rm -f /tmp/Build_Clover.tmp
+rm -f /tmp/tmp/cfg.txt
 
-FindScriptPath
-checkCmdlineArguments $@
 SetVars
+checkCmdlineArguments $@
 
 # setting default paths
 case "$MODE" in
